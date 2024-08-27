@@ -1,0 +1,194 @@
+Program No:3 – On Constraints
+
+---------------------------------------------------------------------------------------------------------------
+1.	Consider the following schema for a Library Database: 
+BOOK (Book_id, Title, Publisher_Name, Pub_Year) 
+BOOK_AUTHORS (Book_id, Author_Name) 
+PUBLISHER (Name, Address, Phone) 
+BOOK_COPIES (Book_id, Branch_id, No-of_Copies) 
+BOOK_LENDING (Book_id, Branch_id, Card_No, Date_Out, Due_Date) 
+LIBRARY_BRANCH (Branch_id, Branch_Name, Address) 
+
+Write SQL queries to 
+1. Retrieve details of all books in the library – id, title, name of publisher, authors, number of copies in each branch, etc. 
+2. Get the particulars of borrowers who have borrowed more than 3 books, but from 1st  Jan 2017 to 30th Sep 2017 
+3. Delete a book in BOOK table. Update the contents of other tables to reflect this data manipulation operation. 
+4. Partition the BOOK table based on year of publication. Demonstrate its working with a simple query. 
+5.   Create a view of all books and its number of copies that are currently available in the library.
+6. List the book id, title, publisher name, author name along with total number of copies of each textbook and sort the records in the descending order of book_id.
+7.  List the book id, title, publisher name, along with total number of copies of each textbook where number of copies is greater than 2 and sort the records in the ascending order of book_id.
+8. Retrieve the book id along with date of publication details of books which are published in 2016.
+9. Create / Alter table by ADD/ DROP CONSTRAINT – like NOT NULL, Unique, CHECK, Primary Key, INDEX, AUTO INCREMENT, Foreign Key, DEFAULT
+
+---------------------------------------------------------------------------------------------------------------
+Solutions – 
+
+Table Creation - 
+
+CREATE TABLE PUBLISHER 
+(PUBL_NAME VARCHAR (20) PRIMARY KEY, 
+PHONE BIGINT, 
+ADDRESS VARCHAR (20)); 
+
+CREATE TABLE BOOK 
+(BOOK_ID INTEGER NOT NULL PRIMARY KEY, 
+TITLE VARCHAR (20), 
+PUB_YEAR VARCHAR (20), 
+PUBL_NAME varchar(20),
+FOREIGN KEY (PUBL_NAME) REFERENCES PUBLISHER (PUBL_NAME) ON DELETE CASCADE);
+
+CREATE TABLE BOOK_AUTHORS 
+(AUTHOR_NAME VARCHAR (20),
+BOOK_ID int, 
+FOREIGN KEY (BOOK_ID) REFERENCES BOOK (BOOK_ID) ON DELETE CASCADE, 
+PRIMARY KEY (BOOK_ID, AUTHOR_NAME)); 
+CREATE TABLE LIBRARY_BRANCH 
+(BRANCH_ID INTEGER PRIMARY KEY, 
+BRANCH_NAME VARCHAR (50), 
+ADDRESS VARCHAR (50)); 
+
+CREATE TABLE BOOK_COPIES 
+(NO_OF_COPIES INTEGER, 
+Book_id int,
+branch_id int,
+FOREIGN KEY (BOOK_ID) REFERENCES BOOK (BOOK_ID) ON DELETE CASCADE, 
+FOREIGN KEY (BRANCH_ID) REFERENCES LIBRARY_BRANCH (BRANCH_ID) ON DELETE 
+CASCADE, 
+PRIMARY KEY (BOOK_ID, BRANCH_ID)); 
+
+CREATE TABLE CARD 
+(CARD_NO INTEGER PRIMARY KEY); 
+
+CREATE TABLE BOOK_LENDING 
+(DATE_OUT DATE, 
+DUE_DATE DATE, 
+Book_id int,
+Branch_id int,
+card_no int,
+FOREIGN KEY (BOOK_ID) REFERENCES BOOK (BOOK_ID) ON DELETE CASCADE, 
+FOREIGN KEY (BRANCH_ID) REFERENCES LIBRARY_BRANCH (BRANCH_ID) ON DELETE 
+CASCADE, 
+FOREIGN KEY (CARD_NO) REFERENCES CARD (CARD_NO) ON DELETE CASCADE, 
+PRIMARY KEY (BOOK_ID, BRANCH_ID, CARD_NO)); 
+
+Relational Schema - 
+
+ 
+
+Insertion of Values to Tables 
+INSERT INTO PUBLISHER VALUES ('MCGRAW-HILL', 9989076587, 'BANGALORE'); 
+INSERT INTO PUBLISHER VALUES ('PEARSON', 9889076565, 'NEWDELHI'); 
+INSERT INTO PUBLISHER VALUES ('Jaico', 7455679345, 'HYDRABAD'); 
+INSERT INTO PUBLISHER VALUES ('LIVRE', 8970862340, 'CHENNAI'); 
+INSERT INTO PUBLISHER VALUES ('PLANETA', 7756120238, 'BANGALORE');
+
+INSERT INTO BOOK VALUES (1,'DBMS','2017-01-18', 'MCGRAW-HILL'); 
+INSERT INTO BOOK VALUES (2,'ADBMS','2016-06-16', 'MCGRAW-HILL'); 
+INSERT INTO BOOK VALUES (3,'CN','2016-09-26', 'PEARSON'); 
+INSERT INTO BOOK VALUES (4,'CG','2015-05-18', 'PLANETA'); 
+INSERT INTO BOOK VALUES (5,'OS','2016-05-09', 'PEARSON');
+
+INSERT INTO BOOK_AUTHORS VALUES ('NAVATHE', 1); 
+INSERT INTO BOOK_AUTHORS VALUES ('NAVATHE', 2); 
+INSERT INTO BOOK_AUTHORS VALUES ('TANENBAUM', 3); 
+INSERT INTO BOOK_AUTHORS VALUES ('EDWARD ANGEL', 4); 
+INSERT INTO BOOK_AUTHORS VALUES ('GALVIN', 5);
+
+INSERT INTO LIBRARY_BRANCH VALUES (10,'Branch1','BANGALORE'); 
+INSERT INTO LIBRARY_BRANCH VALUES (11,'Branch2','BANGALORE'); 
+INSERT INTO LIBRARY_BRANCH VALUES (12,'Branch3', 'BANGALORE'); 
+INSERT INTO LIBRARY_BRANCH VALUES (13,'Branch4','MANGALORE'); 
+INSERT INTO LIBRARY_BRANCH VALUES (14,'Branch5','Mysore');
+
+INSERT INTO BOOK_COPIES VALUES (10, 1, 10); 
+INSERT INTO BOOK_COPIES VALUES (5, 1, 11); 
+INSERT INTO BOOK_COPIES VALUES (2, 2, 12); 
+INSERT INTO BOOK_COPIES VALUES (5, 2, 13); 
+INSERT INTO BOOK_COPIES VALUES (7, 3, 14); 
+INSERT INTO BOOK_COPIES VALUES (1, 5, 10); 
+INSERT INTO BOOK_COPIES VALUES (3, 4, 11); 
+
+INSERT INTO CARD VALUES (100); 
+INSERT INTO CARD VALUES (101); 
+INSERT INTO CARD VALUES (102); 
+INSERT INTO CARD VALUES (103); 
+INSERT INTO CARD VALUES (104);
+
+INSERT INTO BOOK_LENDING VALUES ('2017-01-21','2017-06-21', 1, 10, 101); 
+INSERT INTO BOOK_LENDING VALUES ('2017-02-19','2017-07-19', 3, 14, 101); 
+INSERT INTO BOOK_LENDING VALUES ('2017-02-26','2017-07-26', 2, 13, 101); 
+INSERT INTO BOOK_LENDING VALUES ('2017-03-15','2017-09-15', 4, 11, 101); 
+INSERT INTO BOOK_LENDING VALUES ('2017-04-12','2017-10-12', 1, 11, 104);
+
+Queries: 
+1.	Retrieve details of all books in the library – id, title, name of publisher, authors, number of copies in each branch, etc. 
+
+Sol:
+
+Use lab2;
+SELECT B.BOOK_ID, B.TITLE, B.PUBL_NAME, A.AUTHOR_NAME, 
+C.NO_OF_COPIES, L.BRANCH_ID 
+FROM BOOK B, BOOK_AUTHORS A, BOOK_COPIES C, LIBRARY_BRANCH L 
+WHERE B.BOOK_ID=A.BOOK_ID 
+AND B.BOOK_ID=C.BOOK_ID 
+AND L.BRANCH_ID=C.BRANCH_ID;
+
+2.	Get the particulars of borrowers who have borrowed more than 3 books, but from 
+Jan 2017 to Jun 2017. 
+
+Sol:
+use lab2;
+
+SELECT CARD_NO 
+FROM BOOK_LENDING 
+WHERE DATE_OUT BETWEEN '2017-01-21' AND '2017-09-15'
+GROUP BY CARD_NO 
+HAVING COUNT(*)>3;
+
+3.	Delete a book in BOOK table. Update the contents of other tables to reflect this data 
+manipulation operation. 
+Sol:
+
+DELETE FROM BOOK 
+WHERE BOOK_ID=3;
+
+4.	Partition the BOOK table based on year of publication. Demonstrate its working with a simple query. 
+Sol:
+
+CREATE VIEW V_PUBLICATION AS 
+SELECT PUB_YEAR 
+FROM BOOK;
+
+5.	Create a view of all books and its number of copies that are currently available in the library. 
+Sol:
+CREATE VIEW V_BOOKS AS 
+SELECT B.BOOK_ID, B.TITLE, C.NO_OF_COPIES 
+FROM BOOK B, BOOK_COPIES C, LIBRARY_BRANCH L 
+WHERE B.BOOK_ID=C.BOOK_ID 
+AND C.BRANCH_ID=L.BRANCH_ID;
+
+
+6.	List the book id, title ,publisher name, author name along with total number of copies of each textbook and sort the records in the descending order of book_id.
+
+SELECT B.BOOK_ID, B.TITLE, B.PUBL_NAME, A.AUTHOR_NAME,SUM(NO_OF_COPIES)
+FROM BOOK B, BOOK_AUTHORS A, BOOK_COPIES C, LIBRARY_BRANCH L 
+WHERE B.BOOK_ID=A.BOOK_ID 
+AND B.BOOK_ID=C.BOOK_ID 
+AND L.BRANCH_ID=C.BRANCH_ID
+group by book_id
+order by book_id DESC;
+
+7.	List the book id, title, publisher name, along with total number of copies of each textbook where number of copies is greater than 2 and sort the records in the ascending order of book_id.
+
+SELECT B.BOOK_ID, B.TITLE, B.PUBL_NAME, A.AUTHOR_NAME,SUM(NO_OF_COPIES)
+FROM BOOK B, BOOK_AUTHORS A, BOOK_COPIES C, LIBRARY_BRANCH L 
+WHERE B.BOOK_ID=A.BOOK_ID 
+AND B.BOOK_ID=C.BOOK_ID 
+AND L.BRANCH_ID=C.BRANCH_ID
+group by book_id
+having SUM(NO_OF_COPIES)>2
+order by book_id;
+
+8.	Retrieve the book id along with date of publication details of books which are published in 2016.
+
+SELECT BOOK_ID,PUB_YEAR FROM BOOK WHERE PUB_YEAR LIKE '2016%';
